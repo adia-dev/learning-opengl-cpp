@@ -14,10 +14,10 @@ add_compile_definitions(GLFW_INCLUDE_NONE)
 file(GLOB_RECURSE SOURCES src/*.cpp src/**/*.cpp)
 set(GLAD_DIR external/)
 
-file(GLOB SHADERS "./shaders/**/*")
+file(GLOB SHADERS "shaders/**/*")
 
 foreach(SHADER ${SHADERS})
-    message(${SHADER})
+    message("DETECTED A SHADER FILE: ${SHADER}")
     configure_file(${SHADER} ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
 endforeach()
 
