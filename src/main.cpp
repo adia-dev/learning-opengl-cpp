@@ -2,26 +2,11 @@
 #include "buffer/vertex_buffer.h"
 #include "config/constants.h"
 #include "renderer/renderer.h"
-#include <GLFW/glfw3.h>
+#include "shader/shader.h"
+
 #include <cstddef>
 #include <cstdio>
 #include <glad/glad.h>
-#include <iostream>
-
-const char *vertex_shader_source = "#version 330 core\n"
-                                   "layout (location = 0) in vec3 aPos;\n"
-                                   " void main()\n"
-                                   " {\n"
-                                   " gl_Position = vec4(aPos.xyz, 1.0f);\n"
-                                   " }\n";
-
-const char *fragment_shader_source =
-    "#version 330 core\n"
-    "out vec4 FragColor;\n"
-    " void main()\n"
-    " {\n"
-    " FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
-    " }\n";
 
 void c_speed(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window);
@@ -78,48 +63,11 @@ int main(int argc, char **argv) {
   index_buffer.unbind();
   GL_CALL(glBindVertexArray(0));
 
-  unsigned int vertex_shader;
-  vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-  GL_CALL(glShaderSource(vertex_shader, 1, &vertex_shader_source, NULL));
-  GL_CALL(glCompileShader(vertex_shader));
-
-  int success;
-  char info_log[512];
-  GL_CALL(glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success));
-  if (!success) {
-    GL_CALL(glGetShaderInfoLog(vertex_shader, 512, NULL, info_log));
-    std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n"
-              << info_log << std::endl;
-  }
-
-  unsigned int fragment_shader;
-  fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-  GL_CALL(glShaderSource(fragment_shader, 1, &fragment_shader_source, NULL));
-  GL_CALL(glCompileShader(fragment_shader));
-
-  GL_CALL(glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success));
-  if (!success) {
-    glGetShaderInfoLog(fragment_shader, 512, NULL, info_log);
-    std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n"
-              << info_log << std::endl;
-  }
-
-  unsigned int shader_program;
-  shader_program = glCreateProgram();
-  GL_CALL(glAttachShader(shader_program, vertex_shader));
-  GL_CALL(glAttachShader(shader_program, fragment_shader));
-  GL_CALL(glLinkProgram(shader_program));
-
-  GL_CALL(glGetProgramiv(shader_program, GL_LINK_STATUS, &success));
-  if (!success) {
-    GL_CALL(glGetProgramInfoLog(shader_program, 512, NULL, info_log));
-    std::cout << "ERROR::PROGRAM::SHADER_PROGRAM::LINKING_FAILED\n"
-              << info_log << std::endl;
-  }
-
-  GL_CALL(glUseProgram(shader_program));
-  GL_CALL(glDeleteShader(vertex_shader));
-  GL_CALL(glDeleteShader(fragment_shader));
+  Shader shader;
+  shader
+      .add_shader("vertex.glsl", GL_VERTEX_SHADER) //
+      .add_shader("fragment.glsl", GL_FRAGMENT_SHADER)
+      .compile_and_link();
 
   while (!glfwWindowShouldClose(window)) {
     processInput(window);
@@ -128,7 +76,12 @@ int main(int argc, char **argv) {
     GL_CALL(glClearColor(0.2f, 0.3f, 0.3f, 1.0f));
     GL_CALL(glClear(GL_COLOR_BUFFER_BIT));
 
-    GL_CALL(glUseProgram(shader_program));
+    float timeValue = glfwGetTime();
+    shader.use();
+    shader.set_uniform("time", timeValue);
+
+    shader.use();
+
     GL_CALL(glBindVertexArray(VAO));
     index_buffer.bind();
     GL_CALL(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
