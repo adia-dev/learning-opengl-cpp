@@ -1,4 +1,7 @@
+#include "buffer/index_buffer.h"
+#include "buffer/vertex_buffer.h"
 #include "config/constants.h"
+#include "renderer/renderer.h"
 #include <GLFW/glfw3.h>
 #include <cstddef>
 #include <cstdio>
@@ -60,46 +63,41 @@ int main(int argc, char **argv) {
 
   const unsigned int indices[] = {0, 1, 2, 1, 2, 3};
 
-  unsigned int VAO, VBO, EBO;
-  glGenVertexArrays(1, &VAO);
-  glGenBuffers(1, &VBO);
-  glGenBuffers(1, &EBO);
+  unsigned int VAO;
+  GL_CALL(glGenVertexArrays(1, &VAO));
+  GL_CALL(glBindVertexArray(VAO));
 
-  glBindVertexArray(VAO);
+  VertexBuffer vertex_buffer(vertices, sizeof(vertices));
+  IndexBuffer index_buffer(indices, 6);
 
-  glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+  GL_CALL(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float),
+                                (void *)0));
+  GL_CALL(glEnableVertexAttribArray(0));
 
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
-               GL_STATIC_DRAW);
-
-  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void *)0);
-  glEnableVertexAttribArray(0);
-
-  glBindBuffer(GL_ARRAY_BUFFER, 0); // Unbind the VBO
-  glBindVertexArray(0);             // Unbind the VAO
+  vertex_buffer.unbind();
+  index_buffer.unbind();
+  GL_CALL(glBindVertexArray(0));
 
   unsigned int vertex_shader;
   vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-  glShaderSource(vertex_shader, 1, &vertex_shader_source, NULL);
-  glCompileShader(vertex_shader);
+  GL_CALL(glShaderSource(vertex_shader, 1, &vertex_shader_source, NULL));
+  GL_CALL(glCompileShader(vertex_shader));
 
   int success;
   char info_log[512];
-  glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
+  GL_CALL(glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success));
   if (!success) {
-    glGetShaderInfoLog(vertex_shader, 512, NULL, info_log);
+    GL_CALL(glGetShaderInfoLog(vertex_shader, 512, NULL, info_log));
     std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n"
               << info_log << std::endl;
   }
 
   unsigned int fragment_shader;
   fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-  glShaderSource(fragment_shader, 1, &fragment_shader_source, NULL);
-  glCompileShader(fragment_shader);
+  GL_CALL(glShaderSource(fragment_shader, 1, &fragment_shader_source, NULL));
+  GL_CALL(glCompileShader(fragment_shader));
 
-  glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
+  GL_CALL(glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success));
   if (!success) {
     glGetShaderInfoLog(fragment_shader, 512, NULL, info_log);
     std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n"
@@ -108,32 +106,33 @@ int main(int argc, char **argv) {
 
   unsigned int shader_program;
   shader_program = glCreateProgram();
-  glAttachShader(shader_program, vertex_shader);
-  glAttachShader(shader_program, fragment_shader);
-  glLinkProgram(shader_program);
+  GL_CALL(glAttachShader(shader_program, vertex_shader));
+  GL_CALL(glAttachShader(shader_program, fragment_shader));
+  GL_CALL(glLinkProgram(shader_program));
 
-  glGetProgramiv(shader_program, GL_LINK_STATUS, &success);
+  GL_CALL(glGetProgramiv(shader_program, GL_LINK_STATUS, &success));
   if (!success) {
-    glGetProgramInfoLog(shader_program, 512, NULL, info_log);
+    GL_CALL(glGetProgramInfoLog(shader_program, 512, NULL, info_log));
     std::cout << "ERROR::PROGRAM::SHADER_PROGRAM::LINKING_FAILED\n"
               << info_log << std::endl;
   }
 
-  glUseProgram(shader_program);
-  glDeleteShader(vertex_shader);
-  glDeleteShader(fragment_shader);
+  GL_CALL(glUseProgram(shader_program));
+  GL_CALL(glDeleteShader(vertex_shader));
+  GL_CALL(glDeleteShader(fragment_shader));
 
   while (!glfwWindowShouldClose(window)) {
     processInput(window);
 
     // Rendering
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+    GL_CALL(glClearColor(0.2f, 0.3f, 0.3f, 1.0f));
+    GL_CALL(glClear(GL_COLOR_BUFFER_BIT));
 
-    glUseProgram(shader_program); // Use the shader program
-    glBindVertexArray(VAO);       // Re-bind the VAO
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-    glBindVertexArray(0); // Unbind the VAO
+    GL_CALL(glUseProgram(shader_program));
+    GL_CALL(glBindVertexArray(VAO));
+    index_buffer.bind();
+    GL_CALL(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
+    GL_CALL(glBindVertexArray(0));
 
     // Check and Events + Buf Swapping
     glfwSwapBuffers(window);
