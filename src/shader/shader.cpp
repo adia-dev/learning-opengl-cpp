@@ -18,8 +18,8 @@ Shader::~Shader() {
   GL_CALL(glDeleteProgram(_id));
 }
 
-Shader &Shader::add_shader(const std::string &file_path, unsigned int type) {
-  unsigned int shader = glCreateShader(type);
+Shader &Shader::add_shader(const std::string &file_path, ShaderType type) {
+  unsigned int shader = glCreateShader((GLenum)type);
   std::string src = read_shader_from_file(file_path);
   const char *c_src = src.c_str();
   GL_CALL(glShaderSource(shader, 1, &c_src, nullptr));

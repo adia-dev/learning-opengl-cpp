@@ -1,5 +1,7 @@
 #include "buffer/index_buffer.h"
+#include "buffer/vertex_array.h"
 #include "buffer/vertex_buffer.h"
+#include "buffer/vertex_buffer_layout.h"
 #include "config/constants.h"
 #include "renderer/renderer.h"
 #include "shader/shader.h"
@@ -48,16 +50,13 @@ int main(int argc, char **argv) {
 
   const unsigned int indices[] = {0, 1, 2, 1, 2, 3};
 
-  unsigned int VAO;
-  GL_CALL(glGenVertexArrays(1, &VAO));
-  GL_CALL(glBindVertexArray(VAO));
-
   VertexBuffer vertex_buffer(vertices, sizeof(vertices));
   IndexBuffer index_buffer(indices, 6);
+  VertexArray vertex_array;
 
-  GL_CALL(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float),
-                                (void *)0));
-  GL_CALL(glEnableVertexAttribArray(0));
+  VertexBufferLayout layout;
+  layout.push<float>(2);
+  vertex_array.add_buffer(vertex_buffer, layout);
 
   vertex_buffer.unbind();
   index_buffer.unbind();
@@ -65,8 +64,8 @@ int main(int argc, char **argv) {
 
   Shader shader;
   shader
-      .add_shader("vertex.glsl", GL_VERTEX_SHADER) //
-      .add_shader("fragment.glsl", GL_FRAGMENT_SHADER)
+      .add_shader("vertex.glsl", ShaderType::Vertex) //
+      .add_shader("fragment.glsl", ShaderType::Fragment)
       .compile_and_link();
 
   while (!glfwWindowShouldClose(window)) {
@@ -82,10 +81,10 @@ int main(int argc, char **argv) {
 
     shader.use();
 
-    GL_CALL(glBindVertexArray(VAO));
+    vertex_array.bind();
     index_buffer.bind();
+
     GL_CALL(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
-    GL_CALL(glBindVertexArray(0));
 
     // Check and Events + Buf Swapping
     glfwSwapBuffers(window);

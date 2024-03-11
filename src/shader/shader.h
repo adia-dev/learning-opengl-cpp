@@ -2,19 +2,26 @@
 
 #include <string>
 #include <vector>
+#include <renderer/renderer.h>
+
+enum class ShaderType {
+  Vertex = GL_VERTEX_SHADER,
+  Fragment = GL_FRAGMENT_SHADER,
+};
 
 class Shader {
 public:
   Shader();
   ~Shader();
 
-  Shader &add_shader(const std::string &file_path, unsigned int type);
+  Shader &add_shader(const std::string &file_path, ShaderType type);
   void compile_and_link();
   void use() const;
   void set_uniform(const std::string &name, float value);
   void set_uniform(const std::string &name, float v1, float v2);
   void set_uniform(const std::string &name, float v1, float v2, float v3);
-  void set_uniform(const std::string &name, float v1, float v2, float v3, float v4);
+  void set_uniform(const std::string &name, float v1, float v2, float v3,
+                   float v4);
 
 private:
   unsigned int _id;
