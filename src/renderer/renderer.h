@@ -1,27 +1,17 @@
 #pragma once
 
-#include <GLFW/glfw3.h>
-#include <glad/glad.h>
-#include <iostream>
+#include <buffer/index_buffer.h>
+#include <buffer/vertex_array.h>
+#include <shader/shader.h>
 
-static void GLClearError() {
-  while (glGetError() != GL_NO_ERROR)
-    ;
-}
+class Renderer {
+public:
+  Renderer() = default;
+  ~Renderer() = default;
 
-static bool GLLogCall(const char *function, const char *file, int line) {
-  while (GLenum error = glGetError()) {
-    std::cout << "[OpenGL Error] (" << error << "): " << function << " " << file
-              << ":" << line << std::endl;
-    return false;
-  }
-  return true;
-}
+  void draw(const VertexArray &vertex_array, const IndexBuffer &index_buffer,
+            const Shader &shader) const;
+  void clear() const;
 
-#define ASSERT(x)                                                              \
-  if (!(x))                                                                    \
-    __builtin_trap();
-#define GL_CALL(x)                                                             \
-  GLClearError();                                                              \
-  x;                                                                           \
-  ASSERT(GLLogCall(#x, __FILE__, __LINE__))
+private:
+};

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "buffer/vertex_buffer.h"
-#include "buffer/vertex_buffer_layout.h"
-#include <renderer/renderer.h>
+#include <buffer/vertex_buffer.h>
+
+class VertexBufferLayout;
 
 class VertexArray {
 public:

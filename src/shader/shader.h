@@ -2,11 +2,10 @@
 
 #include <string>
 #include <vector>
-#include <renderer/renderer.h>
 
 enum class ShaderType {
-  Vertex = GL_VERTEX_SHADER,
-  Fragment = GL_FRAGMENT_SHADER,
+  Vertex = 35633,
+  Fragment = 35632,
 };
 
 class Shader {

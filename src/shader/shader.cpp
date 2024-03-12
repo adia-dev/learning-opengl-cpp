@@ -4,6 +4,7 @@
 #include <glad/glad.h>
 #include <iostream>
 #include <renderer/renderer.h>
+#include <renderer/utils.h>
 #include <sstream>
 #include <string>
 #include <vector>

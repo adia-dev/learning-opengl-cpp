@@ -1,10 +1,11 @@
-#include "buffer/index_buffer.h"
-#include "buffer/vertex_array.h"
-#include "buffer/vertex_buffer.h"
-#include "buffer/vertex_buffer_layout.h"
-#include "config/constants.h"
-#include "renderer/renderer.h"
-#include "shader/shader.h"
+#include <buffer/index_buffer.h>
+#include <buffer/vertex_array.h>
+#include <buffer/vertex_buffer.h>
+#include <buffer/vertex_buffer_layout.h>
+#include <config/constants.h>
+#include <renderer/renderer.h>
+#include <shader/shader.h>
+#include <renderer/utils.h>
 
 #include <cstddef>
 #include <cstdio>
@@ -68,12 +69,13 @@ int main(int argc, char **argv) {
       .add_shader("fragment.glsl", ShaderType::Fragment)
       .compile_and_link();
 
+  Renderer renderer;
+
   while (!glfwWindowShouldClose(window)) {
     processInput(window);
 
     // Rendering
-    GL_CALL(glClearColor(0.2f, 0.3f, 0.3f, 1.0f));
-    GL_CALL(glClear(GL_COLOR_BUFFER_BIT));
+    renderer.clear();
 
     float timeValue = glfwGetTime();
     shader.use();
@@ -81,10 +83,7 @@ int main(int argc, char **argv) {
 
     shader.use();
 
-    vertex_array.bind();
-    index_buffer.bind();
-
-    GL_CALL(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
+    renderer.draw(vertex_array, index_buffer, shader);
 
     // Check and Events + Buf Swapping
     glfwSwapBuffers(window);
