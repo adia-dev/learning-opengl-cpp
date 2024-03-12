@@ -12,17 +12,19 @@ find_package(glfw3 3.3 REQUIRED)
 add_compile_definitions(GLFW_INCLUDE_NONE)
 
 file(GLOB_RECURSE SOURCES src/*.cpp src/**/*.cpp)
-set(GLAD_DIR external/)
-
 file(GLOB SHADERS "shaders/**/*")
+file(GLOB RESOURCES "res/**/*")
 
 foreach(SHADER ${SHADERS})
-    message("DETECTED A SHADER FILE: ${SHADER}")
     configure_file(${SHADER} ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
 endforeach()
 
+foreach(RES ${RESOURCES})
+    configure_file(${RES} ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
+endforeach()
+
 add_executable(app ${SOURCES})
-add_subdirectory(external/glad/)
+add_subdirectory(vendor/)
 
 target_include_directories(app PUBLIC src glfw deps include)
-target_link_libraries(app PUBLIC glfw glad)
+target_link_libraries(app PUBLIC glfw glad stb_image)
