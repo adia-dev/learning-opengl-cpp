@@ -1,5 +1,6 @@
 #pragma once
 
+#include "glm/glm.hpp"
 #include <string>
 #include <vector>
 
@@ -23,6 +24,8 @@ public:
   void set_uniform(const std::string &name, float v1, float v2, float v3);
   void set_uniform(const std::string &name, float v1, float v2, float v3,
                    float v4);
+
+  void set_uniform(const std::string &name, const glm::mat4 &mat);
 
 private:
   unsigned int _id;

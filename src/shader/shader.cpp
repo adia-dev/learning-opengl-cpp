@@ -88,6 +88,11 @@ void Shader::set_uniform(const std::string &name, float v1, float v2, float v3,
   glUniform4f(get_uniform_location(name), v1, v2, v3, v4);
 }
 
+void Shader::set_uniform(const std::string &name, const glm::mat4 &mat) {
+  GL_CALL(
+      glUniformMatrix4fv(get_uniform_location(name), 1, GL_FALSE, &mat[0][0]));
+}
+
 void Shader::check_compile_errors(unsigned int object, std::string type) {
   GLint success;
   GLchar info_log[1024];

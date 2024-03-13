@@ -1,3 +1,4 @@
+#include "glm/ext/matrix_clip_space.hpp"
 #include "texture/texture_2d.h"
 #include "utils/R.h"
 #include <buffer/index_buffer.h>
@@ -8,6 +9,9 @@
 #include <renderer/renderer.h>
 #include <renderer/utils.h>
 #include <shader/shader.h>
+
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #include <cstddef>
 #include <cstdio>
@@ -48,10 +52,10 @@ int main(int argc, char **argv) {
 
   const float vertices[] = {
       // positions       // texture coords
-      0.5f,  0.5f,  0.0f, 1.0f, // top right
-      0.5f,  -0.5f, 0.0f, 0.0f, // bottom right
-      -0.5f, -0.5f, 1.0f, 0.0f, // bottom left
-      -0.5f, 0.5f,  1.0f, 1.0f  // top left
+      100.0f,  100.0f,  0.0f, 1.0f, // top right
+      100.0f,  0.0f, 0.0f, 0.0f, // bottom right
+      0.0f, 0.0f, 1.0f, 0.0f, // bottom left
+      0.0f, 100.0f,  1.0f, 1.0f  // top left
   };
 
   const unsigned int indices[] = {
@@ -72,11 +76,16 @@ int main(int argc, char **argv) {
   GL_CALL(glEnable(GL_BLEND));
   GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
 
+  glm::mat4 proj = glm::ortho(0.0f, (float)WINDOW_WIDTH, 0.0f,
+                              (float)WINDOW_HEIGHT, -1.0f, 1.0f);
+
   Shader shader;
   shader
       .add_shader(R::shaders("default/vertex.vert"), ShaderType::Vertex) //
       .add_shader(R::shaders("default/fragment.frag"), ShaderType::Fragment)
       .compile_and_link();
+
+  shader.set_uniform("u_MVP", proj);
 
   Texture2D texture(R::textures("arc.png"));
   texture.bind();
