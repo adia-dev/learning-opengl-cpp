@@ -83,10 +83,10 @@ int main(int argc, char **argv) {
 
   const float vertices[] = {
       // positions       // texture coords
-      100.0f, 100.0f, 0.0f, 1.0f, // top right
-      100.0f, 0.0f,   0.0f, 0.0f, // bottom right
-      0.0f,   0.0f,   1.0f, 0.0f, // bottom left
-      0.0f,   100.0f, 1.0f, 1.0f  // top left
+      50.0f, 50.0f, 0.0f, 1.0f, // top right
+      50.0f, -50.0f,   0.0f, 0.0f, // bottom right
+      -50.0f,   -50.0f,   1.0f, 0.0f, // bottom left
+      -50.0f,   50.0f, 1.0f, 1.0f  // top left
   };
 
   const unsigned int indices[] = {
@@ -112,7 +112,8 @@ int main(int argc, char **argv) {
   glm::mat4 view =
       glm::translate(glm::mat4(1.0f), glm::vec3(-100.0f, 0.0f, 0.0f));
 
-  glm::vec3 translate(200.0f, 200.0f, 0.0f);
+  glm::vec3 translateA(200.0f, 200.0f, 0.0f);
+  glm::vec3 translateB(400.0f, 200.0f, 0.0f);
 
   Shader shader;
   shader
@@ -141,13 +142,24 @@ int main(int argc, char **argv) {
 
     // Rendering
     renderer.clear();
-    renderer.draw(vertex_array, index_buffer, shader);
 
-    glm::mat4 model = glm::translate(glm::mat4(1.0f), translate);
-    glm::mat4 mvp = proj * view * model;
+    {
+      glm::mat4 model = glm::translate(glm::mat4(1.0f), translateA);
+      glm::mat4 mvp = proj * view * model;
 
-    shader.bind();
-    shader.set_uniform("u_MVP", mvp);
+      shader.bind();
+      shader.set_uniform("u_MVP", mvp);
+      renderer.draw(vertex_array, index_buffer, shader);
+    }
+
+    {
+      glm::mat4 model = glm::translate(glm::mat4(1.0f), translateB);
+      glm::mat4 mvp = proj * view * model;
+
+      shader.bind();
+      shader.set_uniform("u_MVP", mvp);
+      renderer.draw(vertex_array, index_buffer, shader);
+    }
 
     {
       static float f = 0.0f;
@@ -156,7 +168,10 @@ int main(int argc, char **argv) {
 
       ImGui::Begin("Transform", &show_window);
 
-      ImGui::SliderFloat3("Translation", &translate[0], 0.0f,
+      ImGui::SliderFloat3("TranslationA", &translateA[0], 0.0f,
+                          (float)window_width);
+
+      ImGui::SliderFloat3("TranslationB", &translateB[0], 0.0f,
                           (float)window_width);
 
       ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
