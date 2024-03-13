@@ -25,5 +25,5 @@ endforeach()
 add_executable(app ${SOURCES})
 add_subdirectory(vendor/)
 
-target_include_directories(app PUBLIC src glfw deps include)
-target_link_libraries(app PUBLIC glfw glad stb_image)
+target_include_directories(app PUBLIC src glfw deps include glm)
+target_link_libraries(app PUBLIC glfw glad stb_image glm)
