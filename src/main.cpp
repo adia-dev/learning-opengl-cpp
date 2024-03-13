@@ -23,6 +23,16 @@ static float aspect_ratio =
     static_cast<float>(WINDOW_WIDTH) / static_cast<float>(WINDOW_HEIGHT);
 
 int main(int argc, char **argv) {
+  unsigned int window_width = WINDOW_WIDTH;
+  unsigned int window_height = WINDOW_HEIGHT;
+  for (int i = 1; i < argc; ++i) {
+    if (strcmp(argv[i], "--width") == 0 && i + 1 < argc) {
+      window_width = atoi(argv[i + 1]);
+    } else if (strcmp(argv[i], "--height") == 0 && i + 1 < argc) {
+      window_height = atoi(argv[i + 1]);
+    }
+  }
+
   glfwInit();
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -31,7 +41,7 @@ int main(int argc, char **argv) {
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
   GLFWwindow *window =
-      glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "OpenGL", NULL, NULL);
+      glfwCreateWindow(window_width, window_height, "OpenGL", NULL, NULL);
   if (window == NULL) {
     printf("Failed to create GLFW Window.\n");
     glfwTerminate();
