@@ -1,5 +1,6 @@
-#include "texture/texture_2d.h"
-#include "utils/R.h"
+#include <cstddef>
+#include <cstdio>
+
 #include <buffer/index_buffer.h>
 #include <buffer/vertex_array.h>
 #include <buffer/vertex_buffer.h>
@@ -8,19 +9,26 @@
 #include <renderer/renderer.h>
 #include <renderer/utils.h>
 #include <shader/shader.h>
+#include <texture/texture_2d.h>
+#include <utils/R.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include <cstddef>
-#include <cstdio>
+#include <GLFW/glfw3.h>
 #include <glad/glad.h>
+
+#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
 
 void c_speed(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window);
 
 static float aspect_ratio =
     static_cast<float>(WINDOW_WIDTH) / static_cast<float>(WINDOW_HEIGHT);
+
+static const char *glsl_version = "#version 330";
 
 int main(int argc, char **argv) {
   unsigned int window_width = WINDOW_WIDTH;
@@ -59,6 +67,20 @@ int main(int argc, char **argv) {
 
   glfwSetFramebufferSizeCallback(window, c_speed);
 
+  IMGUI_CHECKVERSION();
+  ImGui::CreateContext();
+  ImGuiIO &io = ImGui::GetIO();
+  (void)io;
+  io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+
+  ImGui::StyleColorsDark();
+
+  ImGui_ImplGlfw_InitForOpenGL(window, true);
+#ifdef __EMSCRIPTEN__
+  ImGui_ImplGlfw_InstallEmscriptenCanvasResizeCallback("#canvas");
+#endif
+  ImGui_ImplOpenGL3_Init(glsl_version);
+
   const float vertices[] = {
       // positions       // texture coords
       100.0f, 100.0f, 0.0f, 1.0f, // top right
@@ -89,18 +111,14 @@ int main(int argc, char **argv) {
                               (float)WINDOW_HEIGHT, -1.0f, 1.0f);
   glm::mat4 view =
       glm::translate(glm::mat4(1.0f), glm::vec3(-100.0f, 0.0f, 0.0f));
-  glm::mat4 model =
-      glm::translate(glm::mat4(1.0f), glm::vec3(200.0f, 200.0f, 0.0f));
 
-  glm::mat4 mvp = proj * view * model;
+  glm::vec3 translate(200.0f, 200.0f, 0.0f);
 
   Shader shader;
   shader
       .add_shader(R::shaders("default/vertex.vert"), ShaderType::Vertex) //
       .add_shader(R::shaders("default/fragment.frag"), ShaderType::Fragment)
       .compile_and_link();
-
-  shader.set_uniform("u_MVP", mvp);
 
   Texture2D texture(R::textures("arc.png"));
   texture.bind();
@@ -114,17 +132,50 @@ int main(int argc, char **argv) {
   shader.unbind();
 
   while (!glfwWindowShouldClose(window)) {
+    glfwPollEvents();
     processInput(window);
+
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
 
     // Rendering
     renderer.clear();
     renderer.draw(vertex_array, index_buffer, shader);
 
-    // Check and Events + Buf Swapping
+    glm::mat4 model = glm::translate(glm::mat4(1.0f), translate);
+    glm::mat4 mvp = proj * view * model;
+
+    shader.bind();
+    shader.set_uniform("u_MVP", mvp);
+
+    {
+      static float f = 0.0f;
+      static int counter = 0;
+      static bool show_window = 0;
+
+      ImGui::Begin("Transform", &show_window);
+
+      ImGui::SliderFloat3("Translation", &translate[0], 0.0f,
+                          (float)window_width);
+
+      ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
+                  1000.0f / io.Framerate, io.Framerate);
+
+      ImGui::End();
+    }
+
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
     glfwSwapBuffers(window);
-    glfwPollEvents();
   }
 
+  ImGui_ImplOpenGL3_Shutdown();
+  ImGui_ImplGlfw_Shutdown();
+  ImGui::DestroyContext();
+
+  glfwDestroyWindow(window);
   glfwTerminate();
   return 0;
 }
