@@ -19,7 +19,7 @@ void VertexArray::add_buffer(const VertexBuffer &vertex_buffer,
                                   element.normalized, layout.stride(),
                                   (const void *)offset));
     offset +=
-        element.count + VertexBufferLayoutElement::size_of_type(element.type);
+        element.count * VertexBufferLayoutElement::size_of_type(element.type);
   }
 }
 

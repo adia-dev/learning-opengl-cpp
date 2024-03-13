@@ -5,7 +5,7 @@ void Renderer::draw(const VertexArray &vertex_array,
                     const IndexBuffer &index_buffer,
                     const Shader &shader) const {
 
-  shader.use();
+  shader.bind();
   vertex_array.bind();
   index_buffer.bind();
 
@@ -15,6 +15,6 @@ void Renderer::draw(const VertexArray &vertex_array,
 
 void Renderer::clear() const {
 
-  GL_CALL(glClearColor(0.2f, 0.3f, 0.3f, 1.0f));
+  GL_CALL(glClearColor(0.2f, 0.2f, 0.2f, 1.0f));
   GL_CALL(glClear(GL_COLOR_BUFFER_BIT));
 }

@@ -12,7 +12,7 @@
 Shader::Shader() : _id(glCreateProgram()) {}
 
 Shader::~Shader() {
-  for (auto &shader : shaders) {
+  for (auto &shader : _shaders) {
     GL_CALL(glDetachShader(_id, shader));
     GL_CALL(glDeleteShader(shader));
   }
@@ -33,7 +33,7 @@ Shader &Shader::add_shader(const std::string &file_path, ShaderType type) {
   }
 
   GL_CALL(glAttachShader(_id, shader));
-  shaders.push_back(shader);
+  _shaders.push_back(shader);
   return *this;
 }
 
@@ -42,31 +42,50 @@ void Shader::compile_and_link() {
   check_compile_errors(_id, "PROGRAM");
 
   // After linking, shaders can be deleted
-  for (auto &shader : shaders) {
+  for (auto &shader : _shaders) {
     GL_CALL(glDetachShader(_id, shader));
     GL_CALL(glDeleteShader(shader));
   }
-  shaders.clear();
+  _shaders.clear();
+  bind();
 }
 
-void Shader::use() const { glUseProgram(_id); }
+void Shader::bind() const { glUseProgram(_id); }
+void Shader::unbind() const { glUseProgram(0); }
+
+int Shader::get_uniform_location(const std::string &name) {
+  if (_uniforms_location_cache.find(name) != _uniforms_location_cache.end()) {
+    return _uniforms_location_cache[name];
+  }
+
+  int location = glGetUniformLocation(_id, name.c_str());
+  if (location == -1) {
+    std::cout << "[OpenGL Warning]: uniform `" << name
+              << "` doesn't exists !\n";
+  }
+  return _uniforms_location_cache[name] = location;
+}
+
+void Shader::set_uniform(const std::string &name, int value) {
+  glUniform1i(get_uniform_location(name), value);
+}
 
 void Shader::set_uniform(const std::string &name, float value) {
-  glUniform1f(glGetUniformLocation(_id, name.c_str()), value);
+  glUniform1f(get_uniform_location(name), value);
 }
 
 void Shader::set_uniform(const std::string &name, float v1, float v2) {
-  glUniform2f(glGetUniformLocation(_id, name.c_str()), v1, v2);
+  glUniform2f(get_uniform_location(name), v1, v2);
 }
 
 void Shader::set_uniform(const std::string &name, float v1, float v2,
                          float v3) {
-  glUniform3f(glGetUniformLocation(_id, name.c_str()), v1, v2, v3);
+  glUniform3f(get_uniform_location(name), v1, v2, v3);
 }
 
 void Shader::set_uniform(const std::string &name, float v1, float v2, float v3,
                          float v4) {
-  glUniform4f(glGetUniformLocation(_id, name.c_str()), v1, v2, v3, v4);
+  glUniform4f(get_uniform_location(name), v1, v2, v3, v4);
 }
 
 void Shader::check_compile_errors(unsigned int object, std::string type) {

@@ -1,11 +1,13 @@
+#include "texture/texture_2d.h"
+#include "utils/R.h"
 #include <buffer/index_buffer.h>
 #include <buffer/vertex_array.h>
 #include <buffer/vertex_buffer.h>
 #include <buffer/vertex_buffer_layout.h>
 #include <config/constants.h>
 #include <renderer/renderer.h>
-#include <shader/shader.h>
 #include <renderer/utils.h>
+#include <shader/shader.h>
 
 #include <cstddef>
 #include <cstdio>
@@ -44,45 +46,54 @@ int main(int argc, char **argv) {
 
   glfwSetFramebufferSizeCallback(window, c_speed);
 
-  // just drawing a square (two triangles) on the whole screen
   const float vertices[] = {
-      -0.5f, -0.5f, -0.5f, 0.5f, 0.5f, -0.5f, 0.5f, 0.5f,
+      // positions       // texture coords
+      0.5f,  0.5f,  0.0f, 1.0f, // top right
+      0.5f,  -0.5f, 0.0f, 0.0f, // bottom right
+      -0.5f, -0.5f, 1.0f, 0.0f, // bottom left
+      -0.5f, 0.5f,  1.0f, 1.0f  // top left
   };
 
-  const unsigned int indices[] = {0, 1, 2, 1, 2, 3};
+  const unsigned int indices[] = {
+      0, 1, 2, // 0
+      2, 3, 0  // 1
+  };
 
-  VertexBuffer vertex_buffer(vertices, sizeof(vertices));
-  IndexBuffer index_buffer(indices, 6);
+  VertexBuffer vertex_buffer(vertices, 4 * 4 * sizeof(float));
   VertexArray vertex_array;
 
   VertexBufferLayout layout;
   layout.push<float>(2);
+  layout.push<float>(2);
   vertex_array.add_buffer(vertex_buffer, layout);
 
-  vertex_buffer.unbind();
-  index_buffer.unbind();
-  GL_CALL(glBindVertexArray(0));
+  IndexBuffer index_buffer(indices, 6);
+
+  GL_CALL(glEnable(GL_BLEND));
+  GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
 
   Shader shader;
   shader
-      .add_shader("vertex.glsl", ShaderType::Vertex) //
-      .add_shader("fragment.glsl", ShaderType::Fragment)
+      .add_shader(R::shaders("default/vertex.vert"), ShaderType::Vertex) //
+      .add_shader(R::shaders("default/fragment.frag"), ShaderType::Fragment)
       .compile_and_link();
 
+  Texture2D texture(R::textures("arc.png"));
+  texture.bind();
+  shader.set_uniform("u_Texture", 0);
+
   Renderer renderer;
+
+  vertex_array.unbind();
+  vertex_buffer.unbind();
+  index_buffer.unbind();
+  shader.unbind();
 
   while (!glfwWindowShouldClose(window)) {
     processInput(window);
 
     // Rendering
     renderer.clear();
-
-    float timeValue = glfwGetTime();
-    shader.use();
-    shader.set_uniform("time", timeValue);
-
-    shader.use();
-
     renderer.draw(vertex_array, index_buffer, shader);
 
     // Check and Events + Buf Swapping
