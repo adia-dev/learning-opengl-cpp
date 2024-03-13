@@ -1,4 +1,3 @@
-#include "glm/ext/matrix_clip_space.hpp"
 #include "texture/texture_2d.h"
 #include "utils/R.h"
 #include <buffer/index_buffer.h>
@@ -52,10 +51,10 @@ int main(int argc, char **argv) {
 
   const float vertices[] = {
       // positions       // texture coords
-      100.0f,  100.0f,  0.0f, 1.0f, // top right
-      100.0f,  0.0f, 0.0f, 0.0f, // bottom right
-      0.0f, 0.0f, 1.0f, 0.0f, // bottom left
-      0.0f, 100.0f,  1.0f, 1.0f  // top left
+      100.0f, 100.0f, 0.0f, 1.0f, // top right
+      100.0f, 0.0f,   0.0f, 0.0f, // bottom right
+      0.0f,   0.0f,   1.0f, 0.0f, // bottom left
+      0.0f,   100.0f, 1.0f, 1.0f  // top left
   };
 
   const unsigned int indices[] = {
@@ -78,6 +77,12 @@ int main(int argc, char **argv) {
 
   glm::mat4 proj = glm::ortho(0.0f, (float)WINDOW_WIDTH, 0.0f,
                               (float)WINDOW_HEIGHT, -1.0f, 1.0f);
+  glm::mat4 view =
+      glm::translate(glm::mat4(1.0f), glm::vec3(-100.0f, 0.0f, 0.0f));
+  glm::mat4 model =
+      glm::translate(glm::mat4(1.0f), glm::vec3(200.0f, 200.0f, 0.0f));
+
+  glm::mat4 mvp = proj * view * model;
 
   Shader shader;
   shader
@@ -85,7 +90,7 @@ int main(int argc, char **argv) {
       .add_shader(R::shaders("default/fragment.frag"), ShaderType::Fragment)
       .compile_and_link();
 
-  shader.set_uniform("u_MVP", proj);
+  shader.set_uniform("u_MVP", mvp);
 
   Texture2D texture(R::textures("arc.png"));
   texture.bind();
