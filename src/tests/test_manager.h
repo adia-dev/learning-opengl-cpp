@@ -24,6 +24,7 @@ public:
 
   template <class T, class... TestArgs>
   void register_test(const std::string &name, TestArgs &&...args) {
+        std::cout << "Registering test: " << name << std::endl;
     _keys.push_back(name);
     _tests[name] = [&args...]() {
       return std::make_unique<T>(std::forward<TestArgs>(args)...);

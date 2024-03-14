@@ -49,8 +49,14 @@ void TestManager::select_test(const std::string &name) {
     return;
   }
 
+  if (!_current_test_name.empty()) {
+    std::cout << _current_test_name << " test done." << std::endl;
+  }
+
   _current_test_name = name;
   _current_test = _tests[name]();
+
+  std::cout << "Selected test: " << name << std::endl;
 }
 void TestManager::reset_test() { select_test(_current_test_name); }
 std::vector<std::string> TestManager::keys() const { return _keys; }
