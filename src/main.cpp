@@ -1,5 +1,9 @@
+#include "tests/buffer_test.h"
 #include <cstddef>
 #include <cstdio>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
 #include <buffer/index_buffer.h>
 #include <buffer/vertex_array.h>
@@ -9,6 +13,8 @@
 #include <renderer/renderer.h>
 #include <renderer/utils.h>
 #include <shader/shader.h>
+#include <tests/clear_color_test.h>
+#include <tests/test.h>
 #include <texture/texture_2d.h>
 #include <utils/R.h>
 
@@ -21,6 +27,7 @@
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
+#include <vector>
 
 void c_speed(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window);
@@ -81,101 +88,56 @@ int main(int argc, char **argv) {
 #endif
   ImGui_ImplOpenGL3_Init(glsl_version);
 
-  const float vertices[] = {
-      // positions       // texture coords
-      50.0f, 50.0f, 0.0f, 1.0f, // top right
-      50.0f, -50.0f,   0.0f, 0.0f, // bottom right
-      -50.0f,   -50.0f,   1.0f, 0.0f, // bottom left
-      -50.0f,   50.0f, 1.0f, 1.0f  // top left
-  };
-
-  const unsigned int indices[] = {
-      0, 1, 2, // 0
-      2, 3, 0  // 1
-  };
-
-  VertexBuffer vertex_buffer(vertices, 4 * 4 * sizeof(float));
-  VertexArray vertex_array;
-
-  VertexBufferLayout layout;
-  layout.push<float>(2);
-  layout.push<float>(2);
-  vertex_array.add_buffer(vertex_buffer, layout);
-
-  IndexBuffer index_buffer(indices, 6);
-
   GL_CALL(glEnable(GL_BLEND));
   GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
 
-  glm::mat4 proj = glm::ortho(0.0f, (float)WINDOW_WIDTH, 0.0f,
-                              (float)WINDOW_HEIGHT, -1.0f, 1.0f);
-  glm::mat4 view =
-      glm::translate(glm::mat4(1.0f), glm::vec3(-100.0f, 0.0f, 0.0f));
-
-  glm::vec3 translateA(200.0f, 200.0f, 0.0f);
-  glm::vec3 translateB(400.0f, 200.0f, 0.0f);
-
-  Shader shader;
-  shader
-      .add_shader(R::shaders("default/vertex.vert"), ShaderType::Vertex) //
-      .add_shader(R::shaders("default/fragment.frag"), ShaderType::Fragment)
-      .compile_and_link();
-
-  Texture2D texture(R::textures("arc.png"));
-  texture.bind();
-  shader.set_uniform("u_Texture", 0);
-
   Renderer renderer;
 
-  vertex_array.unbind();
-  vertex_buffer.unbind();
-  index_buffer.unbind();
-  shader.unbind();
+  std::unordered_map<std::string, std::shared_ptr<test::Test>> tests;
+  tests["Clear Color"] = std::make_shared<test::ClearColorTest>();
+  tests["Buffers"] = std::make_shared<test::BufferTest>();
+
+  std::shared_ptr<test::Test> current_test = nullptr;
+
+  std::vector<std::string> test_keys;
+  for (auto it : tests) {
+    test_keys.push_back(it.first);
+  }
 
   while (!glfwWindowShouldClose(window)) {
-    glfwPollEvents();
     processInput(window);
+    renderer.clear();
+
+    if (current_test) {
+      current_test->on_update(0.0);
+      current_test->on_render();
+    }
 
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
+    static bool opened = true;
+    if (ImGui::Begin("Test Params"), &opened) {
+      static const char *current_item = NULL;
 
-    // Rendering
-    renderer.clear();
+      if (ImGui::BeginCombo("##test_combo", current_item)) {
+        for (int n = 0; n < test_keys.size(); n++) {
+          bool is_selected = (current_item == test_keys[n].c_str());
 
-    {
-      glm::mat4 model = glm::translate(glm::mat4(1.0f), translateA);
-      glm::mat4 mvp = proj * view * model;
+          if (ImGui::Selectable(test_keys[n].c_str(), is_selected)) {
+            current_item = test_keys[n].c_str();
+            current_test = tests[test_keys[n]];
+          }
+          if (is_selected) {
+            ImGui::SetItemDefaultFocus();
+          }
+        }
+        ImGui::EndCombo();
+      }
 
-      shader.bind();
-      shader.set_uniform("u_MVP", mvp);
-      renderer.draw(vertex_array, index_buffer, shader);
-    }
-
-    {
-      glm::mat4 model = glm::translate(glm::mat4(1.0f), translateB);
-      glm::mat4 mvp = proj * view * model;
-
-      shader.bind();
-      shader.set_uniform("u_MVP", mvp);
-      renderer.draw(vertex_array, index_buffer, shader);
-    }
-
-    {
-      static float f = 0.0f;
-      static int counter = 0;
-      static bool show_window = 0;
-
-      ImGui::Begin("Transform", &show_window);
-
-      ImGui::SliderFloat3("TranslationA", &translateA[0], 0.0f,
-                          (float)window_width);
-
-      ImGui::SliderFloat3("TranslationB", &translateB[0], 0.0f,
-                          (float)window_width);
-
-      ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
-                  1000.0f / io.Framerate, io.Framerate);
+      if (current_test) {
+        current_test->on_imgui_render();
+      }
 
       ImGui::End();
     }
@@ -184,6 +146,7 @@ int main(int argc, char **argv) {
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
     glfwSwapBuffers(window);
+    glfwPollEvents();
   }
 
   ImGui_ImplOpenGL3_Shutdown();
