@@ -1,5 +1,6 @@
 #include "tests/buffer_test.h"
 #include "tests/test_manager.h"
+#include "tests/texture_2d_test.h"
 #include <cstddef>
 #include <cstdio>
 
@@ -93,6 +94,7 @@ int main(int argc, char **argv) {
   test::TestManager test_manager;
   test_manager.register_test<test::ClearColorTest>("Clear Color");
   test_manager.register_test<test::BufferTest>("Buffers");
+  test_manager.register_test<test::Texture2DTest>("Texture2D");
 
   while (!glfwWindowShouldClose(window)) {
     processInput(window);
