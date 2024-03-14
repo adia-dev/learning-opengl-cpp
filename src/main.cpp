@@ -1,9 +1,7 @@
 #include "tests/buffer_test.h"
+#include "tests/test_manager.h"
 #include <cstddef>
 #include <cstdio>
-#include <unordered_map>
-#include <utility>
-#include <vector>
 
 #include <buffer/index_buffer.h>
 #include <buffer/vertex_array.h>
@@ -27,7 +25,6 @@
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
-#include <vector>
 
 void c_speed(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window);
@@ -93,55 +90,21 @@ int main(int argc, char **argv) {
 
   Renderer renderer;
 
-  std::unordered_map<std::string, std::shared_ptr<test::Test>> tests;
-  tests["Clear Color"] = std::make_shared<test::ClearColorTest>();
-  tests["Buffers"] = std::make_shared<test::BufferTest>();
-
-  std::shared_ptr<test::Test> current_test = nullptr;
-
-  std::vector<std::string> test_keys;
-  for (auto it : tests) {
-    test_keys.push_back(it.first);
-  }
+  test::TestManager test_manager;
+  test_manager.register_test<test::ClearColorTest>("Clear Color");
+  test_manager.register_test<test::BufferTest>("Buffers");
 
   while (!glfwWindowShouldClose(window)) {
     processInput(window);
     renderer.clear();
 
-    if (current_test) {
-      current_test->on_update(0.0);
-      current_test->on_render();
-    }
+    test_manager.render();
+    test_manager.update(0.0);
 
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
-    static bool opened = true;
-    if (ImGui::Begin("Test Params"), &opened) {
-      static const char *current_item = NULL;
-
-      if (ImGui::BeginCombo("##test_combo", current_item)) {
-        for (int n = 0; n < test_keys.size(); n++) {
-          bool is_selected = (current_item == test_keys[n].c_str());
-
-          if (ImGui::Selectable(test_keys[n].c_str(), is_selected)) {
-            current_item = test_keys[n].c_str();
-            current_test = tests[test_keys[n]];
-          }
-          if (is_selected) {
-            ImGui::SetItemDefaultFocus();
-          }
-        }
-        ImGui::EndCombo();
-      }
-
-      if (current_test) {
-        current_test->on_imgui_render();
-      }
-
-      ImGui::End();
-    }
-
+    test_manager.imgui_render();
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 

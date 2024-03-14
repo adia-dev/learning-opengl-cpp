@@ -11,6 +11,7 @@ public:
   void on_update(float delta_time) override;
   void on_render() override;
   void on_imgui_render() override;
+  void on_reset() override;
 
 private:
   float _clear_color[4];
