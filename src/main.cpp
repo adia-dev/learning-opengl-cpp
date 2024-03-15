@@ -38,11 +38,14 @@ static const char *glsl_version = "#version 330";
 int main(int argc, char **argv) {
   unsigned int window_width = WINDOW_WIDTH;
   unsigned int window_height = WINDOW_HEIGHT;
+  const char *arg_test = nullptr;
   for (int i = 1; i < argc; ++i) {
     if (strcmp(argv[i], "--width") == 0 && i + 1 < argc) {
       window_width = atoi(argv[i + 1]);
     } else if (strcmp(argv[i], "--height") == 0 && i + 1 < argc) {
       window_height = atoi(argv[i + 1]);
+    } else if (strcmp(argv[i], "--test") == 0 && i + 1 < argc) {
+      arg_test = argv[i + 1];
     }
   }
 
@@ -95,6 +98,10 @@ int main(int argc, char **argv) {
   test_manager.register_test<test::ClearColorTest>("Clear Color");
   test_manager.register_test<test::BufferTest>("Buffers");
   test_manager.register_test<test::Texture2DTest>("Texture2D");
+
+  if(arg_test != nullptr) {
+      test_manager.select_test(arg_test);
+  }
 
   while (!glfwWindowShouldClose(window)) {
     processInput(window);
