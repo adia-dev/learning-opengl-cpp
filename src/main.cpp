@@ -99,8 +99,8 @@ int main(int argc, char **argv) {
   test_manager.register_test<test::BufferTest>("Buffers");
   test_manager.register_test<test::Texture2DTest>("Texture2D");
 
-  if(arg_test != nullptr) {
-      test_manager.select_test(arg_test);
+  if (arg_test != nullptr) {
+    test_manager.select_test(arg_test);
   }
 
   while (!glfwWindowShouldClose(window)) {

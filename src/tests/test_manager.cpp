@@ -12,7 +12,8 @@ void TestManager::imgui_render() {
 
   static bool opened = true;
   if (ImGui::Begin("Test Params"), &opened) {
-    static const char *current_item = _current_test_name.empty() ? nullptr : _current_test_name.c_str();
+    static const char *current_item =
+        _current_test_name.empty() ? nullptr : _current_test_name.c_str();
 
     if (ImGui::BeginCombo("##select_test_combo", current_item)) {
       for (int n = 0; n < _keys.size(); n++) {
