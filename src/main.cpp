@@ -27,7 +27,7 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 
-void c_speed(GLFWwindow *window, int width, int height);
+void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window);
 
 static float aspect_ratio =
@@ -73,7 +73,7 @@ int main(int argc, char **argv) {
 
   glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 
-  glfwSetFramebufferSizeCallback(window, c_speed);
+  glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
@@ -130,7 +130,7 @@ int main(int argc, char **argv) {
   return 0;
 }
 
-void c_speed(GLFWwindow *window, int width, int height) {
+void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
   aspect_ratio = static_cast<float>(width) / static_cast<float>(height);
   glViewport(0, 0, width, height);
 }
